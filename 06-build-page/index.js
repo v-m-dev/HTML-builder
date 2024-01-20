@@ -5,12 +5,19 @@ const path = require('path');
   const projectDistPath = path.join(__dirname, 'project-dist');
   const indexHtmlPath = path.join(projectDistPath, 'index.html');
   const indexHtml = await composeIndexHtml();
+  const styles = await collectStyles(path.join(__dirname, 'styles'));
 
   //   Create project-dist folder
   await createFolder(projectDistPath);
 
   //   Add index.html to project-dist folder
   await createFile(indexHtmlPath, indexHtml);
+
+  //   Add styles to project-dist folder
+  await fsPromises.writeFile(
+    path.join(__dirname, 'project-dist/style.css'),
+    styles,
+  );
 })();
 
 async function getFileContent(filePath) {
@@ -63,4 +70,19 @@ async function composeIndexHtml() {
   templateContent = templateContent.replace('{{footer}}', footerContent);
 
   return templateContent;
+}
+
+async function collectStyles(stylesPath) {
+  const styles = [];
+
+  const files = await fsPromises.readdir(stylesPath);
+
+  // Read all css files in the styles folder and push their content to the stylesToBundle array.
+  for (const file of files) {
+    const filePath = path.join(stylesPath, file);
+    const data = await fsPromises.readFile(filePath, 'utf8');
+    styles.push(data);
+  }
+
+  return styles.join('\n');
 }
