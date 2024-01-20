@@ -7,18 +7,18 @@ try {
     files.forEach((file) => {
       if (file.isFile()) {
         const filePath = path.join(pathToSecretFolder, file.name);
-        const stats = fs.statSync(filePath);
+        fs.stat(filePath, (_, stats) => {
+          const fileExtension = path.extname(filePath);
+          const fileName = path.basename(filePath, fileExtension);
+          const fileSize = stats.size;
 
-        const fileExtension = path.extname(filePath);
-        const fileName = path.basename(filePath, fileExtension);
-        const fileSize = stats.size;
+          const fileInfo = `${fileName} - ${fileExtension.replace(
+            '.',
+            '',
+          )} - ${fileSize}`;
 
-        const fileInfo = `${fileName} - ${fileExtension.replace(
-          '.',
-          '',
-        )} - ${fileSize}`;
-
-        console.log(fileInfo);
+          console.log(fileInfo);
+        });
       }
     });
   });
