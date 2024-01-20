@@ -14,10 +14,14 @@ const path = require('path');
   await createFile(indexHtmlPath, indexHtml);
 
   //   Add styles to project-dist folder
-  await fsPromises.writeFile(
-    path.join(__dirname, 'project-dist/style.css'),
-    styles,
-  );
+  try {
+    await fsPromises.writeFile(
+      path.join(__dirname, 'project-dist/style.css'),
+      styles,
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
 })();
 
 async function getFileContent(filePath) {
