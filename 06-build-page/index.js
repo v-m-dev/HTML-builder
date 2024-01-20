@@ -3,27 +3,14 @@ const path = require('path');
 
 (async function buildPage() {
   const projectDistPath = path.join(__dirname, 'project-dist');
-  const templatePath = path.join(__dirname, 'template.html');
-  const headerPath = path.join(__dirname, 'components', 'header.html');
-  const articlesPath = path.join(__dirname, 'components', 'articles.html');
-  const footerPath = path.join(__dirname, 'components', 'footer.html');
-
-  //   Get data from html files
-  let templateContent = await getFileContent(templatePath);
-  const headerContent = await getFileContent(headerPath);
-  const articlesContent = await getFileContent(articlesPath);
-  const footerContent = await getFileContent(footerPath);
-
-  //   Add components to template
-  templateContent = templateContent.replace('{{header}}', headerContent);
-  templateContent = templateContent.replace('{{articles}}', articlesContent);
-  templateContent = templateContent.replace('{{footer}}', footerContent);
+  const indexHtmlPath = path.join(projectDistPath, 'index.html');
+  const indexHtml = await composeIndexHtml();
 
   //   Create project-dist folder
   await createFolder(projectDistPath);
 
   //   Add index.html to project-dist folder
-  await createFile(path.join(projectDistPath, 'index.html'), templateContent);
+  await createFile(indexHtmlPath, indexHtml);
 })();
 
 async function getFileContent(filePath) {
@@ -56,4 +43,24 @@ async function createFile(filePath, fileContent) {
     console.log(err.message);
   }
   return file;
+}
+
+async function composeIndexHtml() {
+  const templatePath = path.join(__dirname, 'template.html');
+  const headerPath = path.join(__dirname, 'components', 'header.html');
+  const articlesPath = path.join(__dirname, 'components', 'articles.html');
+  const footerPath = path.join(__dirname, 'components', 'footer.html');
+
+  //   Get data from html files
+  const headerContent = await getFileContent(headerPath);
+  const articlesContent = await getFileContent(articlesPath);
+  const footerContent = await getFileContent(footerPath);
+  let templateContent = await getFileContent(templatePath);
+
+  //   Add components to template
+  templateContent = templateContent.replace('{{header}}', headerContent);
+  templateContent = templateContent.replace('{{articles}}', articlesContent);
+  templateContent = templateContent.replace('{{footer}}', footerContent);
+
+  return templateContent;
 }
