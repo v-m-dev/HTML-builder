@@ -101,13 +101,16 @@ async function getFileContent(filePath) {
 async function collectStyles(stylesPath) {
   const styles = [];
 
-  const files = await fsPromises.readdir(stylesPath);
+  const files = await fsPromises.readdir(stylesPath, { withFileTypes: true });
 
   // Read all css files in the styles folder and push their content to the stylesToBundle array.
   for (const file of files) {
-    const filePath = path.join(stylesPath, file);
-    const data = await fsPromises.readFile(filePath, 'utf8');
-    styles.push(data);
+    const filePath = path.join(stylesPath, file.name);
+    const fileExtension = path.extname(filePath);
+    if (fileExtension === '.css') {
+      const data = await fsPromises.readFile(filePath, 'utf8');
+      styles.push(data);
+    }
   }
 
   return styles.join('\n');
@@ -115,20 +118,29 @@ async function collectStyles(stylesPath) {
 
 async function composeIndexHtml() {
   const templatePath = path.join(__dirname, 'template.html');
-  const headerPath = path.join(__dirname, 'components', 'header.html');
-  const articlesPath = path.join(__dirname, 'components', 'articles.html');
-  const footerPath = path.join(__dirname, 'components', 'footer.html');
+  const componentsPath = path.join(__dirname, 'components');
+  let tempContent = await getFileContent(templatePath);
+  let comps = null;
 
-  //   Get data from html files
-  const headerContent = await getFileContent(headerPath);
-  const articlesContent = await getFileContent(articlesPath);
-  const footerContent = await getFileContent(footerPath);
-  let templateContent = await getFileContent(templatePath);
+  try {
+    comps = await fsPromises.readdir(componentsPath, {
+      withFileTypes: true,
+    });
+  } catch (err) {
+    console.log(err.message);
+  }
 
-  //   Add components to template
-  templateContent = templateContent.replace('{{header}}', headerContent);
-  templateContent = templateContent.replace('{{articles}}', articlesContent);
-  templateContent = templateContent.replace('{{footer}}', footerContent);
+  for (const comp of comps) {
+    if (comp.isFile()) {
+      const compPath = path.join(componentsPath, comp.name);
+      const compExt = path.extname(compPath);
+      if (compExt === '.html') {
+        const compContent = await getFileContent(compPath);
+        const compName = path.basename(compPath, compExt); // Component name without extension
+        tempContent = tempContent.replace(`{{${compName}}}`, compContent);
+      }
+    }
+  }
 
-  return templateContent;
+  return tempContent;
 }
